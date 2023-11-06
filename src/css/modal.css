@@ -96,6 +96,12 @@
   background-color: #58bf97;
 }
 
+.modal__error {
+  text-align: center;
+  color: red;
+  font-weight: 500;
+}
+
 
 
 

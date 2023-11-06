@@ -26,6 +26,15 @@ export default class Modal {
     this.modalOk = null;
   }
 
+  showError() {
+    if (this.div.querySelector('.modal__error')) return;
+    const error = document.createElement('span');
+    error.classList.add('modal__error');
+    error.textContent = 'Псевдоним уже занят, попробуйте другой';
+    this.form.append(error);
+    this.formInput.value = '';
+  }
+
   static get markup() {
     return `
     <div class="modal__content">

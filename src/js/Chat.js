@@ -1,5 +1,6 @@
 import ChatAPI from './api/ChatAPI';
 import Modal from './Modal';
+import formatDate from './utils';
 
 export default class Chat {
   constructor(container) {
@@ -26,6 +27,7 @@ export default class Chat {
   static get markup() {
     return `
     <div class="chat__header">Добро пожаловать в чат</div>
+    <button type="button" class="chat__connect">Выйти</button>
     <div class="chat__container">
       <div class="chat__userlist"></div>
       <div class="chat__area">
@@ -39,11 +41,19 @@ export default class Chat {
   }
 
   createMessage(data) {
+    let messageLocation = 'message__container-interlocutor';
+    let { name } = data;
+    const { message } = data;
+    if (data.name === this.user) {
+      name = 'You';
+      messageLocation = 'message__container-yourself';
+    }
     const div = document.createElement('div');
     const messagesContainer = this.container.querySelector('.chat__messages-container');
     div.classList.add('message__container');
-    div.innerHTML = `<div class='message__header'>${data.name} ${data.message.time}</div>
-    <div class="message__container-interlocutor">${data.message.text}</div>
+    div.classList.add(messageLocation);
+    div.innerHTML = `<span class='message__header'>${name}, ${message.time}</span>
+    <p class="message__body">${message.text}</p>
     `;
     messagesContainer.append(div);
   }
@@ -58,6 +68,25 @@ export default class Chat {
       e.preventDefault();
       this.sendMessage();
     });
+
+    const outChat = this.container.querySelector('.chat__connect');
+    outChat.addEventListener('click', () => {
+      if (this.user === null) return;
+      const receivedMessage = {
+        type: 'exit',
+        user: { name: this.user },
+      };
+      this.websocket.send(JSON.stringify(receivedMessage));
+
+      const root = document.querySelector('#root');
+      console.log(root);
+
+      root.textContent = '';
+      this.websocket.close();
+      this.user = null;
+      this.userId = null;
+      this.init();
+    });
   }
 
   websocketOnEvents() {
@@ -69,15 +98,25 @@ export default class Chat {
     this.websocket.addEventListener('message', (e) => {
       const data = JSON.parse(e.data);
       if (Object.getPrototypeOf(data).constructor === Array) {
+        if (this.user === null) return;
+        const list = this.container.querySelector('.chat__userlist');
+        list.innerHTML = '';
         data.map((el) => {
           this.renderUser(el.name);
         });
         this.userId = data[data.length - 1].id;
       }
-      console.log(Object.getPrototypeOf(data).constructor === Object);
+      // console.log(Object.getPrototypeOf(data).constructor === Object);
       if (Object.getPrototypeOf(data).constructor === Object) {
-        console.log(e);
-        this.createMessage(data);
+        if (data.type === 'send') {
+          this.createMessage(data);
+        }
+        if (data.type === 'exit') {
+          console.log(e);
+
+        }
+        console.log(data);
+        
       }
       console.log('ws message');
     });
@@ -106,6 +145,9 @@ export default class Chat {
             this.websocketOnEvents();
             this.subscribeOnEvents();
           }
+          if (responce.status === 409 && responce.status === 400) {
+            this.modal.showError();
+          }
           console.log(responce);
         });
       }
@@ -116,13 +158,14 @@ export default class Chat {
   }
 
   sendMessage() {
-    const formInput = this.container.querySelector('.form__input').value;
+    const formInput = this.container.querySelector('.form__input');
     const payLoad = {
       type: 'send',
-      message: { text: formInput, time: new Date() },
+      message: { text: formInput.value, time: formatDate(new Date()) },
       name: this.user,
     };
     this.websocket.send(JSON.stringify(payLoad));
+    formInput.value = '';
   }
 
   renderMessage(data) {
@@ -130,13 +173,14 @@ export default class Chat {
   }
 
   renderUser(name) {
-    if (name === this.user) {
-      name = 'Your';
-    }
     const userList = this.container.querySelector('.chat__userlist');
     const user = document.createElement('div');
     user.classList.add('chat__user');
     user.textContent = name;
     userList.append(user);
+    if (name === this.user) {
+      user.textContent = 'You';
+      user.style.color = 'red';
+    }
   }
 }
