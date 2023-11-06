@@ -58,9 +58,8 @@ export default class Chat {
     messagesContainer.append(div);
   }
 
-  registerEvents() {
-    
-  }
+  // registerEvents() {
+  // }
 
   subscribeOnEvents() {
     const formMessage = this.container.querySelector('.form');
@@ -101,6 +100,7 @@ export default class Chat {
         if (this.user === null) return;
         const list = this.container.querySelector('.chat__userlist');
         list.innerHTML = '';
+        // eslint-disable-next-line array-callback-return
         data.map((el) => {
           this.renderUser(el.name);
         });
@@ -113,12 +113,8 @@ export default class Chat {
         }
         if (data.type === 'exit') {
           console.log(e);
-
         }
-        console.log(data);
-        
       }
-      console.log('ws message');
     });
 
     this.websocket.addEventListener('close', (e) => {
@@ -133,7 +129,7 @@ export default class Chat {
       e.preventDefault();
       if (formInput.value.trim()) {
         const data = { name: formInput.value };
-        fetch('http://localhost:3000/new-user', {
+        fetch('https://ahj-backend.onrender.com/new-user', {
           method: 'POST',
           body: JSON.stringify(data),
         }).then((responce) => {
@@ -141,11 +137,11 @@ export default class Chat {
             this.user = formInput.value;
             this.modal.deleteModal();
             this.bindToDOM();
-            this.websocket = new WebSocket('ws://localhost:3000/ws');
+            this.websocket = new WebSocket('wss://ahj-backend.onrender.com');
             this.websocketOnEvents();
             this.subscribeOnEvents();
           }
-          if (responce.status === 409 && responce.status === 400) {
+          if (responce.status === 409 || responce.status === 400) {
             this.modal.showError();
           }
           console.log(responce);
@@ -168,9 +164,7 @@ export default class Chat {
     formInput.value = '';
   }
 
-  renderMessage(data) {
-
-  }
+  // renderMessage(data) { }
 
   renderUser(name) {
     const userList = this.container.querySelector('.chat__userlist');
