@@ -1,11 +1,11 @@
-import ChatAPI from './api/ChatAPI';
+// import ChatAPI from './api/ChatAPI';
 import Modal from './Modal';
 import formatDate from './utils';
 
 export default class Chat {
   constructor(container) {
     this.container = container;
-    this.api = new ChatAPI();
+    // this.api = new ChatAPI();
     this.websocket = null;
     this.modal = new Modal();
     this.user = null;
